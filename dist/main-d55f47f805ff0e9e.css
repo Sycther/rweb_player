@@ -1,0 +1,7 @@
+::-webkit-scrollbar {
+    width: 15px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: oklch(var(--b2));
+}

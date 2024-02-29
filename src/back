@@ -1,0 +1,118 @@
+use yew::prelude::*;
+
+#[derive(Clone, PartialEq)]
+struct Video {
+    id: usize,
+    title: String,
+    channel: String,
+}
+
+#[derive(Properties, PartialEq)]
+struct VideosListProps {
+    videos: Vec<Video>,
+    onclick: Callback<Video>
+}
+
+#[derive(Properties, PartialEq)]
+struct VideoDetailsProp {
+    video: Video,
+}
+
+enum Message {
+    NextSong,
+    PreviousSong,
+    GoTo(Video),
+}
+
+#[function_component(MediaList)]
+fn media_list(VideosListProps {videos, onclick} : &VideosListProps) -> Html {
+
+    videos.iter().map(|video| {
+        let on_video_select = {
+            let on_click = onclick.clone();
+            let video = video.clone();
+            Callback::from(move |_| {
+                on_click.emit(video.clone())
+            })
+        };
+
+        html! {
+            <p key={video.id}  onclick={on_video_select}>{format!{"{}: {}", video.channel, video.title}}</p>
+        }
+    }).collect::<Html>()
+}
+
+#[function_component(MediaDetails)]
+fn media_details(VideoDetailsProp {video}: &VideoDetailsProp ) -> Html {
+    html! {
+        <div>
+            <h3>{format!{"SELECTED VIDEO: {}", video.title.clone()}} </h3>
+        </div>
+    }
+}
+
+#[function_component]
+fn MediaPlayer() -> Html {
+    let videos = vec![
+        Video {
+            id: 123,
+            title: "How to get better at coding".to_string(),
+            channel: "Sean Flebbe".to_string(),
+        }, Video {
+            id: 456,
+            title: "Error at line 58 out of 32".to_string(),
+            channel: "Sean Flebbe".to_string(),
+        }, Video {
+            id: 789,  
+            title: "How it all went downhill".to_string(),
+            channel: "Sean Flebbe".to_string(),
+        }
+    ];
+
+    let counter: UseStateHandle<i32> = use_state(|| 0);
+    let next = {
+        let counter = counter.clone();
+        move |_| {
+            let value = *counter + 1;
+            counter.set(value);
+        }
+    };
+    let prev = {
+        let counter = counter.clone();
+        move |_| {
+            let value = *counter - 1;
+            counter.set(value);
+        }
+    };
+
+    let selected_video: UseStateHandle<Option<Video>> = use_state(|| Some(videos[0].clone()));
+    let on_media_select = {
+        let selected_video = selected_video.clone();
+        Callback::from(move |video| {
+            selected_video.set(Some(video))
+        })
+    };
+    let details = selected_video.as_ref().map(|video|
+        html! {
+            <MediaDetails video={video.clone()}/>
+        }
+    );
+    html! {
+        <div>
+            {details}
+            <button onclick={prev}>{"Previous"}</button>
+            <button onclick={next}>{"Next"}</button>
+            <p> {"MEDIA"} </p>
+            <MediaList videos={videos} onclick={on_media_select} />
+        </div>
+    }
+}
+
+#[function_component(App)]
+fn app() -> Html {
+    html! {
+        <div>
+            <MediaPlayer/>
+        </div>
+    }
+}
